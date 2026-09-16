@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отдел физико-химических измерений</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <h1>Отдел физико-химических измерений</h1>
+        <div class="header-actions">
+            <nav class="tabs" id="main-tabs">
+                <button class="tab active" data-tab="journal">Журнал выездов</button>
+                <button class="tab" data-tab="spare">Запчасти</button>
+            </nav>
+            <div class="file-status" id="github-status">
+                <span class="file-status-dot disconnected"></span>
+                <span id="github-status-text">Не настроено</span>
+            </div>
+            <button id="btn-github-settings" class="btn btn-secondary">Настройки GitHub</button>
+            <div class="role-indicator" id="role-indicator">
+                <span class="role-dot employee"></span>
+                <span id="role-text">Сотрудник</span>
+            </div>
+            <button id="btn-login" class="btn btn-secondary">Войти</button>
+            <button id="btn-logout" class="btn btn-secondary" style="display:none;">Выйти</button>
+            <button id="btn-add" class="btn btn-primary boss-only" style="display:none;">+ Добавить</button>
+            <button id="btn-export-csv" class="btn btn-success boss-only" style="display:none;">Экспорт CSV</button>
+        </div>
+    </header>
+
+    <!-- ===== ВКЛАДКА: ЖУРНАЛ ВЫЕЗДОВ ===== -->
+    <section id="tab-journal" class="tab-content active">
+        <div class="filter-bar">
+            <input type="text" id="filter-search" placeholder="Поиск по всем полям...">
+            <input type="date" id="filter-date-from">
+            <span class="filter-dash">—</span>
+            <input type="date" id="filter-date-to">
+            <button id="btn-clear-filter" class="btn btn-secondary btn-sm">Сбросить</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="records-table">
+                <thead>
+                    <tr>
+                        <th data-sort="date">Дата выезда</th>
+                        <th data-sort="company">Предприятие</th>
+                        <th data-sort="contactName">Контактное лицо</th>
+                        <th>Телефон</th>
+                        <th>Адрес</th>
+                        <th data-sort="employee">Кто поедет</th>
+                        <th>Примечание</th>
+                        <th>Ознакомлен</th>
+                        <th class="boss-only" style="display:none;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="records-body"></tbody>
+            </table>
+            <div id="empty-state" class="empty-state">
+                Настройте подключение к GitHub для начала работы.<br>
+                Нажмите <b>"Настройки GitHub"</b> и укажите данные репозитория.
+            </div>
+        </div>
+        <div class="stats" id="stats"></div>
+    </section>
+
+    <!-- ===== ВКЛАДКА: ЗАПЧАСТИ ===== -->
+    <section id="tab-spare" class="tab-content" style="display:none;">
+        <div class="spare-toolbar">
+            <h2 class="spare-title">Каталог запчастей</h2>
+            <div class="spare-actions">
+                <button id="btn-add-spare" class="btn btn-primary boss-only" style="display:none;">+ Добавить запчасть</button>
+                <button id="btn-designate" class="btn btn-secondary boss-only" style="display:none;">Назначить сотрудников</button>
+                <button id="btn-writeoff" class="btn btn-success spare-designated" style="display:none;">+ Списать запчасть</button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="spare-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Тип запчасти</th>
+                        <th>Количество</th>
+                        <th>Стоимость</th>
+                        <th class="boss-only" style="display:none;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="spare-body"></tbody>
+            </table>
+            <div id="spare-empty" class="empty-state">Каталог запчастей пуст.</div>
+        </div>
+
+        <div class="spare-toolbar" style="margin-top:16px;">
+            <h2 class="spare-title">Журнал списания</h2>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="usage-table">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Запчасть</th>
+                        <th>Кол-во</th>
+                        <th>Счёт поверки</th>
+                        <th>Счёт ремонта</th>
+                        <th>Примечание</th>
+                        <th>Кто списал</th>
+                    </tr>
+                </thead>
+                <tbody id="usage-body"></tbody>
+            </table>
+            <div id="usage-empty" class="empty-state">Записей списания нет.</div>
+        </div>
+    </section>
+
+    <button id="fab-add" class="fab boss-only" style="display:none;" title="Добавить запись">+</button>
+
+    <!-- Модалка добавления/редактирования выезда -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Новая запись</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <form id="trip-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="date">Дата выезда</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Предприятие</label>
+                        <input type="text" id="company" list="company-list" required autocomplete="off">
+                        <datalist id="company-list"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-name">Контактное лицо (ФИО)</label>
+                        <input type="text" id="contact-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-phone">Телефон</label>
+                        <input type="tel" id="contact-phone" placeholder="+7 (___) ___-__-__">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="address">Адрес</label>
+                        <input type="text" id="address" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Кто поедет</label>
+                        <div class="multi-select" id="employee-multi-select">
+                            <div class="multi-select-trigger" id="employee-trigger">Выберите сотрудников...</div>
+                            <div class="multi-select-dropdown" id="employee-dropdown"></div>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="note">Примечание</label>
+                        <textarea id="note" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-submit">Добавить</button>
+                    <button type="button" id="btn-cancel" class="btn btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка входа -->
+    <div class="modal-overlay" id="login-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Вход</h2>
+                <button class="modal-close" id="login-close">&times;</button>
+            </div>
+            <form id="login-form">
+                <div class="login-fields">
+                    <div class="form-group">
+                        <label for="login-role">Роль</label>
+                        <select id="login-role">
+                            <option value="employee">Сотрудник</option>
+                            <option value="boss">Начальник отдела</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="login-name-group">
+                        <label for="login-name">Ваше ФИО</label>
+                        <input type="text" id="login-name" list="login-employee-list" placeholder="Иванов И.И." required autocomplete="off">
+                        <datalist id="login-employee-list"></datalist>
+                    </div>
+                    <div class="form-group" id="login-password-group" style="display:none;">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" placeholder="Введите пароль">
+                    </div>
+                    <div class="login-error" id="login-error">Неверный пароль</div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                    <button type="button" id="btn-login-cancel" class="btn btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка настроек GitHub -->
+    <div class="modal-overlay" id="github-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Настройки GitHub</h2>
+                <button class="modal-close" id="github-close">&times;</button>
+            </div>
+            <form id="github-form">
+                <div class="login-fields">
+                    <div class="form-group">
+                        <label for="gh-owner">Владелец репозитория</label>
+                        <input type="text" id="gh-owner" placeholder="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gh-repo">Название репозитория</label>
+                        <input type="text" id="gh-repo" placeholder="trip-records" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gh-token">Personal Access Token</label>
+                        <input type="password" id="gh-token" placeholder="ghp_..." required>
+                        <span class="field-hint">Scope: repo. Создаётся в GitHub → Settings → Developer settings → Tokens</span>
+                    </div>
+                    <div class="login-error" id="github-error"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить и проверить</button>
+                    <button type="button" id="btn-github-cancel" class="btn btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка добавления запчасти -->
+    <div class="modal-overlay" id="spare-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="spare-modal-title">Новая запчасть</h2>
+                <button class="modal-close" id="spare-close">&times;</button>
+            </div>
+            <form id="spare-form">
+                <div class="login-fields">
+                    <div class="form-group">
+                        <label for="spare-name">Тип запчасти</label>
+                        <input type="text" id="spare-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="spare-quantity">Количество</label>
+                        <input type="number" id="spare-quantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="spare-cost">Стоимость (₽)</label>
+                        <input type="number" id="spare-cost" min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-spare-submit">Добавить</button>
+                    <button type="button" id="btn-spare-cancel" class="btn btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка списания запчасти -->
+    <div class="modal-overlay" id="writeoff-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Списание запчасти</h2>
+                <button class="modal-close" id="writeoff-close">&times;</button>
+            </div>
+            <form id="writeoff-form">
+                <div class="login-fields">
+                    <div class="form-group">
+                        <label for="writeoff-part">Запчасть</label>
+                        <select id="writeoff-part" required>
+                            <option value="">Выберите запчасть...</option>
+                        </select>
+                        <span id="writeoff-remaining" class="field-hint"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="writeoff-qty">Количество</label>
+                        <input type="number" id="writeoff-qty" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="writeoff-verify">Счёт поверки</label>
+                        <input type="text" id="writeoff-verify" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="writeoff-repair">Счёт ремонта</label>
+                        <input type="text" id="writeoff-repair" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="writeoff-note">Примечание</label>
+                        <textarea id="writeoff-note" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Списать</button>
+                    <button type="button" id="btn-writeoff-cancel" class="btn btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка назначения сотрудников -->
+    <div class="modal-overlay" id="designate-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Доступ к запчастям</h2>
+                <button class="modal-close" id="designate-close">&times;</button>
+            </div>
+            <div class="designate-body" id="designate-list"></div>
+            <div class="form-actions" style="padding:0 20px 20px;">
+                <button type="button" class="btn btn-primary" id="btn-designate-save">Сохранить</button>
+                <button type="button" id="btn-designate-cancel" class="btn btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
