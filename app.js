@@ -159,8 +159,10 @@
     function toBase64(str) {
         const bytes = new TextEncoder().encode(str);
         let binary = '';
-        bytes.forEach(b => binary += String.fromCharCode(b));
-        return btoa(binary);
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary).replace(/\n/g, '');
     }
 
     function fromBase64(base64) {
