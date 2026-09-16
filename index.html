@@ -204,29 +204,34 @@
 
     <!-- Модалка настроек GitHub -->
     <div class="modal-overlay" id="github-overlay">
-        <div class="modal-content modal-small">
+        <div class="modal-content">
             <div class="modal-header">
                 <h2>Настройки GitHub</h2>
                 <button class="modal-close" id="github-close">&times;</button>
             </div>
             <form id="github-form">
-                <div class="login-fields">
-                    <div class="form-group">
-                        <label for="gh-owner">Владелец репозитория</label>
-                        <input type="text" id="gh-owner" placeholder="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="gh-repo">Название репозитория</label>
-                        <input type="text" id="gh-repo" placeholder="trip-records" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="gh-token">Personal Access Token</label>
-                        <input type="password" id="gh-token" placeholder="ghp_..." required>
-                        <span class="field-hint">Scope: repo. Создаётся в GitHub → Settings → Developer settings → Tokens</span>
+                <div class="github-form-body">
+                    <p class="github-hint">Укажите данные репозитория для хранения журнала. Эти данные сохраняются в браузере и запрашиваются только один раз.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="gh-owner">Владелец (username)</label>
+                            <input type="text" id="gh-owner" placeholder="kostyaonikienko-droid" required>
+                            <span class="field-hint">Имя пользователя на GitHub</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="gh-repo">Репозиторий</label>
+                            <input type="text" id="gh-repo" placeholder="trip-records" required>
+                            <span class="field-hint">Название репозитория</span>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="gh-token">Personal Access Token</label>
+                            <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" required>
+                            <span class="field-hint">Создаётся: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate. Scope: repo</span>
+                        </div>
                     </div>
                     <div class="login-error" id="github-error"></div>
                 </div>
-                <div class="form-actions">
+                <div class="form-actions" style="padding:0 20px 20px;">
                     <button type="submit" class="btn btn-primary">Сохранить и проверить</button>
                     <button type="button" id="btn-github-cancel" class="btn btn-secondary">Отмена</button>
                 </div>

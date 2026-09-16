@@ -156,6 +156,19 @@
         return `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}${path}`;
     }
 
+    function toBase64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        return btoa(binary);
+    }
+
+    function fromBase64(base64) {
+        const binary = atob(base64);
+        const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
+    }
+
     async function fetchGithubData() {
         if (!githubConfig) return null;
         try {
@@ -163,7 +176,7 @@
             if (res.status === 404) return { content: null, sha: null };
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            const content = data.content ? JSON.parse(atob(data.content)) : null;
+            const content = data.content ? JSON.parse(fromBase64(data.content)) : null;
             return { content, sha: data.sha };
         } catch (e) {
             console.error('GitHub fetch error:', e);
@@ -200,7 +213,7 @@
             };
             const body = {
                 message: 'Update data.json',
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2)))),
+                content: toBase64(JSON.stringify(payload, null, 2)),
                 sha: current.sha || undefined
             };
             const res = await fetch(ghUrl('/contents/data.json'), {
@@ -249,7 +262,7 @@
                 },
                 body: JSON.stringify({
                     message: 'Create data.json',
-                    content: btoa(JSON.stringify({
+                    content: toBase64(JSON.stringify({
                         records: [], companies: [], employees: [...DEFAULT_EMPLOYEES],
                         spareParts: [], sparePartUsage: [], sparePartEmployees: [],
                         createdAt: new Date().toISOString()
