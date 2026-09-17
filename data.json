@@ -12,11 +12,9 @@
         "Заиконников М.Г."
       ],
       "note": "",
-      "acknowledgedBy": [
-        "Полыгалов А.А."
-      ],
+      "acknowledgedBy": [],
       "createdAt": "2026-09-16T10:47:22.785Z",
-      "updatedAt": "2026-09-16T10:48:03.875Z"
+      "updatedAt": "2026-09-17T03:44:45.161Z"
     }
   ],
   "companies": [
@@ -42,5 +40,5 @@
   "spareParts": [],
   "sparePartUsage": [],
   "sparePartEmployees": [],
-  "updatedAt": "2026-09-16T10:48:03.881Z"
+  "updatedAt": "2026-09-17T03:44:45.167Z"
 }
